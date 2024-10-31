@@ -1,0 +1,12 @@
+.App {
+    background-image: url('https://img.freepik.com/free-vector/urban-buildings-with-cityscape-scenery_18591-51878.jpg?t=st=1730296692~exp=1730300292~hmac=c5c1763e8c7e1411b84ad300451ad4950e63b39df042b5fc5d0c1fd2c89d1dc5&w=1380');
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    min-height: 100vh;
+}
+
+.custom-navbar {
+    background-color: #669086;
+}
+

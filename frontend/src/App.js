@@ -1,27 +1,24 @@
-import './App.css';
-import { Component } from 'react';
+import React from 'react';
+import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
+import NavbarComponent from './components/NavbarComponent';
+import RentCarFormComponent from './components/RentCarFormComponent';
+import AdminOverviewComponent from './components/AdminOverviewComponent';
+import { Container } from 'react-bootstrap';
 
-class App extends Component {
-	state = {
-		message: "If spring backend is running and database is running, then this message should be replaced!"
-	};
-	async componentDidMount() {
-		await this.getHelloWorld();
-	}
-	async getHelloWorld() {
-		const response           = await fetch('/helloworld');
-		const helloWorldResponse = await response.json();
-		this.setState({ message: helloWorldResponse.message });
-	}
-	render() {
-		return (
+function App() {
+	return (
+		<Router>
 			<div className="App">
-				<p>
-					{this.state.message}
-				</p>
+				<NavbarComponent />
+				<Container className="mt-4">
+					<Routes>
+						<Route path="/rent" element={<RentCarFormComponent />} />
+						<Route path="/admin" element={<AdminOverviewComponent />} />
+					</Routes>
+				</Container>
 			</div>
-		);
-	}
+		</Router>
+	);
 }
 
 export default App;
