@@ -1,14 +1,16 @@
 import React, { useEffect, useState } from 'react';
 import { listRentals } from "../services/RentalService";
 import { listCars } from "../services/CarService";
-import { calculateRentalCost } from '../components/rentalCalculator'; // Importera kostnadsberäkningsfunktionen
+import { calculateRentalCost } from '../utils/rentalCalculator';
 import Table from 'react-bootstrap/Table';
 
+//Komponent för att visa en översikt av uthyrningar och beräkna total intäkt.
 const AdminOverviewComponent = () => {
-    const [rentals, setRentals] = useState([]);
-    const [cars, setCars] = useState([]);
-    const [totalRevenue, setTotalRevenue] = useState(0);
+    const [rentals, setRentals] = useState([]); // Håller uthyrningar
+    const [cars, setCars] = useState([]); // Håller bilar
+    const [totalRevenue, setTotalRevenue] = useState(0); // Håller total intäkt
 
+    // Hämtar uthyrningar och bilar från API:t
     const fetchData = async () => {
         try {
             const rentalsResponse = await listRentals();
@@ -20,18 +22,21 @@ const AdminOverviewComponent = () => {
         }
     };
 
+    // Anropar fetchData vid komponentens montering och var 5:e sekund
     useEffect(() => {
         fetchData();
         const intervalId = setInterval(fetchData, 5000); // Hämta data var 5:e sekund
 
-        return () => clearInterval(intervalId);
+        return () => clearInterval(intervalId); // Rensar intervallet vid avmontering
     }, []);
 
+    // Beräknar intäkten för en uthyrning
     const calculateRevenue = (rental) => {
         const car = cars.find(car => car.id === rental.carId);
         return car ? calculateRentalCost(car.pricePerDay, rental.pickUpDate, rental.returnDate) : 0;
     };
 
+    // Beräknar total intäkt när uthyrningar eller bilar ändras
     useEffect(() => {
         const total = rentals.reduce((acc, rental) => acc + calculateRevenue(rental), 0);
         setTotalRevenue(total);

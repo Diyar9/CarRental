@@ -4,6 +4,7 @@ import com.example.rental.dto.CarDto;
 
 import java.util.List;
 
+//Interface/gränssnitt med CRUD-metoder för att hantera bilar.
 public interface CarService {
     CarDto createCar(CarDto carDto);
 

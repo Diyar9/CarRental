@@ -14,51 +14,52 @@ import java.util.List;
 @CrossOrigin("*")
 @AllArgsConstructor
 @RestController
-@RequestMapping("/api/rentals")
+@RequestMapping("/api/rentals") //Bas-URI för hyror
 public class RentalController {
 
-    private final RentalService rentalService;
+    private final RentalService rentalService; //Service för rentalsoperationer
 
-    //Build Add Rental REST API
-    @PostMapping
+    //Lägg till rentals REST API
+    @PostMapping //POST
     public ResponseEntity<RentalDto> createRental(@RequestBody RentalDto rentalDto) {
-        RentalDto savedRental = rentalService.createRental(rentalDto);
-        return new ResponseEntity<>(savedRental, HttpStatus.CREATED);
+        RentalDto savedRental = rentalService.createRental(rentalDto); //Anropar service för att spara rentals
+        return new ResponseEntity<>(savedRental, HttpStatus.CREATED); //Returnerar ett nytt objekt
     }
 
-    //Build Get Rental REST API
-    @GetMapping("{id}")
+    //Hämta rentals REST API
+    @GetMapping("{id}") //GET med hyres-ID
     public ResponseEntity<RentalDto> getRentalById(@PathVariable("id") int Id) {
-        RentalDto rental = rentalService.getRentalById(Id);
-        return ResponseEntity.ok(rental);
+        RentalDto rental = rentalService.getRentalById(Id); //Hämta rentals med ID
+        return ResponseEntity.ok(rental); //Returnerar rentals
     }
 
-    //Build Get All Rentals REST API
-    @GetMapping
+    //Hämta alla rentals REST API
+    @GetMapping //GET för alla hyror
     public ResponseEntity<List<RentalDto>> getAllRentals() {
-        List<RentalDto> rentals = rentalService.getAllRentals();
-        return ResponseEntity.ok(rentals);
+        List<RentalDto> rentals = rentalService.getAllRentals(); //Hämta alla rentals
+        return ResponseEntity.ok(rentals); //Returnerar listan med rentals
     }
 
-    // Build Update Rental REST API
-    @PutMapping("{id}")
+    //Uppdatera rentals REST API
+    @PutMapping("{id}") //PUT med hyres-ID
     public ResponseEntity<RentalDto> updateRental(@PathVariable("id") int id, @RequestBody RentalDto updatedRental) {
-        RentalDto existingRental = rentalService.updateRental(id, updatedRental);
-        return ResponseEntity.ok(existingRental);
+        RentalDto existingRental = rentalService.updateRental(id, updatedRental); //Uppdatera rentals
+        return ResponseEntity.ok(existingRental); //Returnerar uppdaterad rentals
     }
 
-    // Build Delete Rental REST API
-    @DeleteMapping("{id}")
+    //Ta bort rentals REST API
+    @DeleteMapping("{id}") //DELETE med hyres-ID
     public ResponseEntity<String> deleteRental(@PathVariable("id") int Id) {
-        rentalService.deleteRental(Id);
+        rentalService.deleteRental(Id); //Ta bort rentalsn
         return ResponseEntity.ok("Rental deleted successfully!.");
     }
 
-    @GetMapping("/cars/{carId}/availability")
+    //Kontrollera bilens tillgänglighet REST API
+    @GetMapping("/cars/{carId}/availability") //GET för bilens tillgänglighet
     public ResponseEntity<Boolean> checkCarAvailability(@PathVariable int carId,
                                                         @RequestParam LocalDate pickUpDate,
                                                         @RequestParam LocalDate returnDate) {
-        boolean isAvailable = rentalService.isCarAvailable(carId, pickUpDate, returnDate);
-        return ResponseEntity.ok(isAvailable);
+        boolean isAvailable = rentalService.isCarAvailable(carId, pickUpDate, returnDate); //Kontrollera tillgänglighet
+        return ResponseEntity.ok(isAvailable); //Returnerar tillgänglighetsstatus
     }
 }

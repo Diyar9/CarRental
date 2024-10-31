@@ -1,81 +1,91 @@
-import React, { useState, useEffect } from 'react';
-import { listCars } from "../services/CarService";
-import { calculateRentalCost } from '../components/rentalCalculator';
-import { Form, Button, Alert, Row, Col } from 'react-bootstrap';
+import React, {useState, useEffect} from 'react';
+import {listCars} from "../services/CarService";
+import {calculateRentalCost} from '../utils/rentalCalculator';
+import {Form, Button, Alert, Row, Col} from 'react-bootstrap';
 import axios from 'axios';
+import {validateDriverName, validateDriverAge, validateRentalDates, validateRequiredFields} from '../validators/rentalValidators';
 
+//Komponent för att hantera uthyrning av bilar genom ett formulär.
 const RentCarFormComponent = () => {
-    const [cars, setCars] = useState([]);
-    const [selectedCar, setSelectedCar] = useState('');
-    const [pickUpDate, setPickUpDate] = useState('');
-    const [returnDate, setReturnDate] = useState('');
-    const [driverName, setDriverName] = useState('');
-    const [driverAge, setDriverAge] = useState('');
-    const [totalCost, setTotalCost] = useState(0);
-    const [errorMessage, setErrorMessage] = useState('');
-    const [currentStep, setCurrentStep] = useState(1);
+    const [cars, setCars] = useState([]); //Håller tillgängliga bilar
+    const [selectedCar, setSelectedCar] = useState(''); //Vald bil
+    const [pickUpDate, setPickUpDate] = useState(''); //Uthyrningsdatum
+    const [returnDate, setReturnDate] = useState(''); //Returdatum
+    const [driverName, setDriverName] = useState(''); //Förarens namn
+    const [driverAge, setDriverAge] = useState(''); //Förarens ålder
+    const [totalCost, setTotalCost] = useState(0); //Total kostnad för uthyrning
+    const [errorMessage, setErrorMessage] = useState(''); //Felmeddelande vid validering
+    const [confirmationMessage, setConfirmationMessage] = useState(''); //Bekräftelsemeddelande vid framgång
+    const [currentStep, setCurrentStep] = useState(1); //Aktuellt steg i formuläret
 
+    // Hämtar bilar från API:t vid montering
     useEffect(() => {
         listCars()
             .then(response => setCars(response.data))
             .catch(console.error);
     }, []);
 
-    useEffect(() => {
-        if (selectedCar && pickUpDate && returnDate) calculateRentalCostHandler();
-    }, [selectedCar, pickUpDate, returnDate]);
+    // Går till nästa steg i formuläret baserat på aktuella val
+    const goToNextStep = () => {
+        if (currentStep === 1 && selectedCar) setCurrentStep(2);
+        else if (currentStep === 2 && pickUpDate && returnDate) setCurrentStep(3);
+    };
 
-    const calculateRentalCostHandler = () => {
+    // Beräknar total kostnad baserat på vald bil och uthyrningsdatum
+    const handleRentalCostCalculation = () => {
         const car = cars.find(car => car.id === parseInt(selectedCar));
-        if (car) {
+        if (car && pickUpDate && returnDate) {
             setTotalCost(calculateRentalCost(car.pricePerDay, pickUpDate, returnDate));
         } else {
             setTotalCost(0);
         }
     };
 
+    // Validerar inmatningar från användaren
+    const validateInputs = () => {
+        const errors = [];
+
+        const driverNameError = validateDriverName(driverName);
+        if (driverNameError) errors.push(driverNameError);
+
+        const driverAgeError = validateDriverAge(driverAge);
+        if (driverAgeError) errors.push(driverAgeError);
+
+        const rentalDatesError = validateRentalDates(pickUpDate, returnDate);
+        if (rentalDatesError) errors.push(rentalDatesError);
+
+        const requiredFieldsError = validateRequiredFields(selectedCar, pickUpDate, returnDate, driverName, driverAge);
+        if (requiredFieldsError) errors.push(requiredFieldsError);
+
+        return errors.length ? errors : null;
+    };
+
+    // Kontrollerar bilens tillgänglighet för uthyrning
     const checkCarAvailability = async () => {
         try {
             const response = await axios.get(`http://localhost:8080/api/rentals/cars/${selectedCar}/availability`, {
-                params: {
-                    pickUpDate,
-                    returnDate,
-                },
+                params: {pickUpDate, returnDate},
             });
-            console.log("Availability check response:", response.data); // Se till att detta visar rätt data
-            return response.data; // Förutsätter att API returnerar en boolean
+            return response.data;
         } catch (error) {
             console.error("Error checking car availability:", error);
-            return false; // Returnera false om API-anropet misslyckas
+            return false;
         }
     };
 
+    // Hanterar formulärinskickning och uthyrning av bil
     const handleSubmit = async (e) => {
         e.preventDefault();
         setErrorMessage("");
 
-        if (!selectedCar || !pickUpDate || !returnDate || !driverName || !driverAge) {
-            setErrorMessage('Alla fält måste vara ifyllda.');
+        const validationError = validateInputs();
+        if (validationError) {
+            setErrorMessage(validationError.join('\n'));
             return;
         }
 
-        if (!/^[a-zA-Z\s]+$/.test(driverName.trim())) {
-            setErrorMessage('Förarnamn får endast innehålla bokstäver och mellanslag.');
-            return;
-        }
-
-        if (parseInt(driverAge) < 18) {
-            setErrorMessage('Föraren måste vara minst 18 år.');
-            return;
-        }
-
-        if (new Date(pickUpDate) >= new Date(returnDate)) {
-            setErrorMessage('Returdatum måste vara efter uthyrningsdatum.');
-            return;
-        }
-
-        // Kontrollera bilens tillgänglighet
         const isAvailable = await checkCarAvailability();
+
         if (!isAvailable) {
             setErrorMessage('Bilen är redan uthyrd under valt datumintervall.');
             return;
@@ -84,22 +94,46 @@ const RentCarFormComponent = () => {
         try {
             const rentalData = { carId: selectedCar, pickUpDate, returnDate, driverName, driverAge };
             await axios.post('http://localhost:8080/api/rentals', rentalData);
-            alert('Bilen har hyrts ut!');
+
+            // Visa bekräftelsemeddelande
+            setConfirmationMessage('Bilen har hyrts ut!');
+
+            // Återställ formuläret
+            setSelectedCar('');
+            setPickUpDate('');
+            setReturnDate('');
+            setDriverName('');
+            setDriverAge('');
+            setTotalCost(0);
+
+            // Återställ steg till 1
+            setCurrentStep(1);
+
+            // Eventuellt uppdatera bil-listan
+            listCars().then(response => setCars(response.data)).catch(console.error);
         } catch (error) {
             const message = error.response?.data?.message || 'Det gick inte att hyra ut bilen.';
             setErrorMessage(message);
         }
     };
 
-    const goToNextStep = () => {
-        if (currentStep === 1 && selectedCar) setCurrentStep(2);
-        else if (currentStep === 2 && pickUpDate && returnDate) setCurrentStep(3);
-    };
+    // Beräknar uthyrningskostnad när inmatningar ändras
+    useEffect(() => {
+        handleRentalCostCalculation();
+    }, [selectedCar, pickUpDate, returnDate]);
+
     return (
         <div className="rent-car-card">
             <div className="rent-car-form">
                 <h2>Hyr en bil</h2>
-                {errorMessage && <Alert variant="danger">{errorMessage}</Alert>}
+                {errorMessage && (
+                    <Alert variant="danger">
+                        {errorMessage.split('\n').map((msg, index) => (
+                            <div key={index}>{msg}</div>
+                        ))}
+                    </Alert>
+                )}
+                {confirmationMessage && <Alert variant="success">{confirmationMessage}</Alert>}
                 <Form onSubmit={handleSubmit}>
                     <div className="stepper">
                         <div className={`step ${currentStep === 1 ? 'active' : ''}`}>
@@ -194,7 +228,6 @@ const RentCarFormComponent = () => {
                                         <Form.Label>Förarens ålder</Form.Label>
                                         <Form.Control
                                             type="number"
-                                            min="18"
                                             value={driverAge}
                                             onChange={e => setDriverAge(e.target.value)}
                                             required
@@ -212,59 +245,6 @@ const RentCarFormComponent = () => {
                         </>
                     )}
                 </Form>
-
-                <style jsx>{`
-                    .rent-car-form {
-                        max-width: 500px;
-                        margin: auto;
-                        padding: 20px;
-                        background-color: #E7F3F3;
-                        border-radius: 8px;
-                        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.4);
-                    }
-
-                    .stepper {
-                        display: flex;
-                        margin-bottom: 1rem;
-                        align-items: center;
-                    }
-
-                    .step {
-                        display: flex;
-                        flex-direction: column;
-                        align-items: center;
-                        flex: 1;
-                    }
-
-                    .step-number {
-                        width: 30px;
-                        height: 30px;
-                        border-radius: 50%;
-                        background: #d8d8d8;
-                        display: flex;
-                        justify-content: center;
-                        align-items: center;
-                        font-weight: bold;
-                        color: #fff;
-                        margin-bottom: 0.5rem;
-                    }
-
-                    .step.active .step-number {
-                        background: #669086;
-                    }
-
-                    .button-spacing {
-                        margin-top: 10px;
-                        margin-right: 10px;
-                        background-color: #669086;
-                        border-color: #669086;
-                        color: white;
-                    }
-                    .button-spacing:hover {
-                        background-color: #557a6f;
-                        border-color: #557a6f;
-                    }
-                `}</style>
             </div>
         </div>
     );
