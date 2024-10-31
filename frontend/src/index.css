@@ -1,0 +1,70 @@
+.App {
+    background-image: url('https://img.freepik.com/free-vector/urban-buildings-with-cityscape-scenery_18591-51878.jpg?t=st=1730296692~exp=1730300292~hmac=c5c1763e8c7e1411b84ad300451ad4950e63b39df042b5fc5d0c1fd2c89d1dc5&w=1380');
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    min-height: 100vh;
+}
+
+.custom-navbar {
+    background-color: #669086;
+}
+
+.rent-car-form {
+    max-width: 500px;
+    margin: auto;
+    padding: 20px;
+    background-color: #E7F3F3;
+    border-radius: 8px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.4);
+}
+
+.stepper {
+    display: flex;
+    margin-bottom: 1rem;
+    align-items: center;
+}
+
+.step {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    flex: 1;
+}
+
+.step-number {
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    background: #d8d8d8;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-weight: bold;
+    color: #fff;
+    margin-bottom: 0.5rem;
+}
+
+.step.active .step-number {
+    background: #669086;
+}
+
+.button-spacing {
+    margin-top: 10px;
+    margin-right: 10px;
+    background-color: #669086;
+    border-color: #669086;
+    color: white;
+}
+.button-spacing:hover {
+    background-color: #557a6f;
+    border-color: #557a6f;
+}
+
+@media (max-width: 576px) {
+    .table {
+        font-size: 0.67rem;
+    }
+}
+
+
